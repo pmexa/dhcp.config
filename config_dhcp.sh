@@ -10,14 +10,14 @@ echo "A detetar interfaces de rede..."
 nmcli device status
 
 NAT_IF="ens160"
-LAN_IF="ens192"
+LAN_IF="ens224"
 STATIC_IP="192.168.10.1"
 NETMASK="255.255.255.0"
 GATEWAY="192.168.10.1"
 DNS="8.8.8.8"
 DHCP_RANGE_START="192.168.10.20"
 DHCP_RANGE_END="192.168.10.30"
-LEASE_TIME="12h"
+LEASE_TIME="40200"
 DNS1="8.8.8.8"
 DNS2="1.1.1.1"
 
