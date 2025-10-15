@@ -41,7 +41,10 @@ bind-interfaces
 
 server=$DNS1
 server=$DNS2
+no-resolv
 
+cache-size=1000
+dhcp-authoritative
 dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END,$LEASE_TIME
 dhcp-option=option:router,$GATEWAY
 dhcp-option=option:ntp-server,$STATIC_IP
