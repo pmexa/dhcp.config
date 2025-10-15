@@ -60,9 +60,10 @@ echo "A abrir porta 67/UDP na firewall..."
 firewall-cmd --add-service=dhcp
 firewall-cmd --runtime-to-permanent
 
-echo "A abrir porta 53/TCP na firewall..."
-firewall-cmd --add-service=dns
-firewall-cmd --runtime-to-permanent
+echo "A abrir porta 53 na firewall..."
+firewall-cmd --add-port=53/udp --permanent
+firewall-cmd --add-port=53/tcp --permanent
+firewall-cmd --reload
 
 systemctl status dnsmasq --no-pager
 
