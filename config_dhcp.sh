@@ -92,7 +92,7 @@ dnf install -y dnsmasq
 echo "A configurar IP estático em $LAN_IF"
 nmcli connection modify $LAN_IF ipv4.addresses $STATIC_IP/24
 nmcli connection modify $LAN_IF ipv4.gateway $GATEWAY
-nmcli connection modify $LAN_IF ipv4.dns $DNS
+nmcli connection modify $LAN_IF ipv4.dns $DNS1
 nmcli connection down $LAN_IF && nmcli connection up $LAN_IF
 echo "IP estático configurado em $LAN_IF"
 
