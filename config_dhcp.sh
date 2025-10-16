@@ -1,26 +1,89 @@
 #!/bin/bash
 
-if [ "$EUID" -ne 0 ];then
-	echo "Tem  de estar em root"
-	exit 1
+is_valid_ip() {
+    local ip=$1
+    local stat=1
+    if [[ $ip =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]]; then
+        OIFS=$IFS; IFS='.'; ip=($ip); IFS=$OIFS
+        [[ ${ip[0]} -le 255 && ${ip[1]} -le 255 && ${ip[2]} -le 255 && ${ip[3]} -le 255 ]]
+        stat=$?
+    fi
+    return $stat
+}
+
+is_valid_interface() {
+    nmcli device show "$1" &>/dev/null
+}
+
+if [ "$EUID" -ne 0 ]; then
+    echo "  Tem de estar em root para executar este script."
+    exit 1
 fi
-echo "A atualizar pacotes..."
+
 dnf -y update
-echo "A detetar interfaces de rede..."
+
+echo
+echo "Interfaces de rede disponíveis:"
 nmcli device status
 
-NAT_IF="ens160"
-LAN_IF="ens224"
-STATIC_IP="192.168.10.1"
-NETMASK="255.255.255.0"
-GATEWAY="192.168.10.1"
-DNS="8.8.8.8"
-DHCP_RANGE_START="192.168.10.20"
-DHCP_RANGE_END="192.168.10.30"
-LEASE_TIME="40200"
-DNS1="8.8.8.8"
-DNS2="1.1.1.1"
+# ---------- Pedir e validar NAT_IF ----------
+while true; do
+    read -p " Introduza a interface de saída (NAT): " NAT_IF
+    if is_valid_interface "$NAT_IF"; then break
+    else echo " Interface inválida. Tente novamente."; fi
+done
 
+# ---------- Pedir e validar LAN_IF ----------
+while true; do
+    read -p " Introduza a interface da rede interna (LAN): " LAN_IF
+    if is_valid_interface "$LAN_IF"; then break
+    else echo " Interface inválida. Tente novamente."; fi
+done
+
+while ! nmcli device show "$LAN_IF" &>/dev/null || [ "$LAN_IF" = "$NAT_IF" ]; do
+    echo " Interface inválida ou igual à NAT."
+    read -p " Introduza novamente a interface LAN: " LAN_IF
+done
+
+# ---------- IP Estático ----------
+while true; do
+    read -p " Introduza o IP estático da LAN (ex: 192.168.10.1): " STATIC_IP
+    if is_valid_ip "$STATIC_IP"; then break
+    else echo " IP inválido. Tente novamente."; fi
+done
+
+# ---------- Gateway ----------
+while true; do
+    read -p " Introduza o gateway (ex: 192.168.10.1): " GATEWAY
+    if is_valid_ip "$GATEWAY"; then break
+    else echo " Gateway inválido. Tente novamente."; fi
+done
+
+# ---------- DNS ----------
+while true; do
+    read -p " Introduza o DNS principal (ex: 8.8.8.8): " DNS1
+    if is_valid_ip "$DNS1"; then break
+    else echo " DNS inválido. Tente novamente."; fi
+done
+
+while true; do
+    read -p " Introduza o DNS secundário (ex: 1.1.1.1): " DNS2
+    if is_valid_ip "$DNS2"; then break
+    else echo " DNS inválido. Tente novamente."; fi
+done
+
+# ---------- Intervalo DHCP ----------
+while true; do
+    read -p " Início do intervalo DHCP (ex: 192.168.10.20): " DHCP_RANGE_START
+    if is_valid_ip "$DHCP_RANGE_START"; then break
+    else echo " IP inválido. Tente novamente."; fi
+done
+
+while true; do
+    read -p " Fim do intervalo DHCP (ex: 192.168.10.30): " DHCP_RANGE_END
+    if is_valid_ip "$DHCP_RANGE_END"; then break
+    else echo " IP inválido. Tente novamente."; fi
+done
 
 echo "A instalar serviço DHCP"
 dnf install -y dnsmasq
@@ -31,21 +94,18 @@ nmcli connection modify $LAN_IF ipv4.addresses $STATIC_IP/24
 nmcli connection modify $LAN_IF ipv4.gateway $GATEWAY
 nmcli connection modify $LAN_IF ipv4.dns $DNS
 nmcli connection down $LAN_IF && nmcli connection up $LAN_IF
-echo "IP estático configurado em ${LAN_IF}"
+echo "IP estático configurado em $LAN_IF"
 
 DHCP_CONF="/etc/dnsmasq.conf"
-echo "A configurar o ficheiro ${DHCP_CONF}..."
+echo "A configurar o ficheiro $DHCP_CONF ..."
 cat > "$DHCP_CONF" <<config
 interface=$LAN_IF
 bind-interfaces
 
 server=$DNS1
 server=$DNS2
-no-resolv
 
-cache-size=1000
-dhcp-authoritative
-dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END,$LEASE_TIME
+dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END
 dhcp-option=option:router,$GATEWAY
 dhcp-option=option:ntp-server,$STATIC_IP
 config
@@ -58,12 +118,10 @@ echo "A ativar e iniciar o serviço DHCP..."
 systemctl enable --now dnsmasq
 echo "A abrir porta 67/UDP na firewall..."
 firewall-cmd --add-service=dhcp
-firewall-cmd --runtime-to-permanent
 
-echo "A abrir porta 53 na firewall..."
-firewall-cmd --add-port=53/udp --permanent
-firewall-cmd --add-port=53/tcp --permanent
-firewall-cmd --reload
+echo "A abrir porta 53/TCP na firewall..."
+firewall-cmd --add-service=dns
+firewall-cmd --runtime-to-permanent
 
 systemctl status dnsmasq --no-pager
 
@@ -77,4 +135,4 @@ firewall-cmd --reload
 echo "Configuração concluída com sucesso"
 echo "Interface LAN:"
 ip addr show $LAN_IF | grep "inet "
-echo "O servidor DHCP está ativo e a distribuir IPs pela interface $LAN_IF"
+echo "Servidor DHCP ativo na interface $LAN_IF"
