@@ -123,13 +123,13 @@ echo "****************************************************"
 echo
 echo "Ficheiro de configuração DHCP criado com sucesso"
 sleep 3
-echo "A ativar e iniciar o serviço DHCP..."
+echo "--------A ativar e iniciar o serviço DHCP----------"
 systemctl enable --now dnsmasq
 sleep 3
-echo "A abrir porta 67/UDP na firewall..."
+echo "--------A abrir porta 67/UDP na firewall-----------"
 firewall-cmd --add-service=dhcp
 sleep 2
-echo "A abrir porta 53/TCP na firewall..."
+echo "--------A abrir porta 53/TCP na firewall-----------"
 sleep 2
 firewall-cmd --add-service=dns
 firewall-cmd --runtime-to-permanent
@@ -143,6 +143,37 @@ echo "net.ipv4.ip_forward=1" >> /etc/sysctl.conf
 iptables -t nat -A POSTROUTING -o $NAT_IF -j MASQUERADE
 firewall-cmd --permanent --add-masquerade
 firewall-cmd --reload
+
+echo "-------A instalar e a configurar Security Enhanced Linux----------"
+dnf install -y policycoreutils selinux-policy selinux-policy-targeted
+sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
+setenforce 1
+sleep 3
+
+echo " -----------A instalar Fail2Ban------------- "
+dnf install -y fail2ban
+systemctl enable --now fail2ban
+
+cat > /etc/fail2ban/jail.local <<config2
+[DEFAULT]
+bantime = 10m
+findtime = 5m
+maxretry = 5
+backend = systemd
+banaction = firewallcmd-ipset
+
+[sshd]
+enabled = true
+
+[dnsmasq-dhcp]
+enabled = true
+port    = 67
+filter  = dnsmasq-dhcp
+logpath = /var/log/messages
+maxretry = 10
+config2
+
+systemctl restart fail2ban
 
 echo "Configuração concluída com sucesso"
 echo "Interface LAN:"
