@@ -126,6 +126,17 @@ echo "****************************************************"
 echo "* Ficheiro de configuração DHCP criado com sucesso *"
 echo "****************************************************"
 echo
+echo "****************************************************"
+echo "*   A criar ficheiro backup da configuração DHCP   *"
+echo "****************************************************"
+DHCP_CONF="/etc/dnsmasq.conf"
+if [ -f "$DHCP_CONF" ] && [ ! -f "${DHCP_CONF}.backup" ]; then
+    cp "$DHCP_CONF" "${DHCP_CONF}.backup"
+    echo " Backup criado: ${DHCP_CONF}.backup"
+else
+    echo " Backup já existe ou ficheiro não encontrado"
+fi
+sleep 2
 echo "Ficheiro de configuração DHCP criado com sucesso"
 sleep 3
 echo "--------A ativar e iniciar o serviço DHCP----------"
