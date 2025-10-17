@@ -171,7 +171,7 @@ restorecon -Rv /etc/dnsmasq.conf /etc/dnsmasq.d
 sleep 3
 
 echo " -----------A instalar e a configurar Fail2Ban------------------- "
-yum install epel-release
+yum install epel-release -y
 dnf install fail2ban -y
 systemctl enable --now fail2ban
 
