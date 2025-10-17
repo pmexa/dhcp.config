@@ -47,6 +47,11 @@ while ! nmcli device show "$LAN_IF" &>/dev/null || [ "$LAN_IF" = "$NAT_IF" ]; do
     read -p " Introduza novamente a interface LAN: " LAN_IF
 done
 
+while ! nmcli device show "$NAT_IF" &>/dev/null || [ "$LAN_IF" = "$NAT_IF" ]; do
+    echo " Interface inválida ou igual à LAN."
+    read -p " Introduza novamente a interface NAT: " NAT_IF
+done
+
 echo " ----------Configurar IP Estático----------"
 while true; do
     read -p " Introduza o IP estático da LAN (ex: 192.168.10.1): " STATIC_IP
