@@ -156,7 +156,8 @@ setenforce 1
 sleep 3
 
 echo " -----------A instalar e a configurar Fail2Ban------------------- "
-dnf install -y fail2ban
+yum install epel-release
+dnf install fail2ban -y
 systemctl enable --now fail2ban
 
 cat > /etc/fail2ban/jail.local <<config2
