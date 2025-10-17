@@ -150,9 +150,16 @@ firewall-cmd --permanent --add-masquerade
 firewall-cmd --reload
 
 echo "-------A instalar e a configurar Security Enhanced Linux----------"
-dnf install -y policycoreutils selinux-policy selinux-policy-targeted
+dnf install   policycoreutils selinux-policy selinux-policy-targeted policycoreutils-python-utils -y
 sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 setenforce 1
+semanage fcontext -a -t dnsmasq_etc_t "/etc/dnsmasq.conf"
+semanage fcontext -a -t dnsmasq_etc_t "/etc/dnsmasq.d(/.*)?"
+restorecon -Rv /etc/dnsmasq.conf /etc/dnsmasq.d
+
+setsebool -P dnsmasq_can_network_connect 1
+setsebool -P dnsmasq_dhcp 1
+setsebool -P dnsmasq_can_dns 1
 sleep 3
 
 echo " -----------A instalar e a configurar Fail2Ban------------------- "
