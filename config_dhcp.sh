@@ -157,9 +157,6 @@ semanage fcontext -a -t dnsmasq_etc_t "/etc/dnsmasq.conf"
 semanage fcontext -a -t dnsmasq_etc_t "/etc/dnsmasq.d(/.*)?"
 restorecon -Rv /etc/dnsmasq.conf /etc/dnsmasq.d
 
-setsebool -P dnsmasq_can_network_connect 1
-setsebool -P dnsmasq_dhcp 1
-setsebool -P dnsmasq_can_dns 1
 sleep 3
 
 echo " -----------A instalar e a configurar Fail2Ban------------------- "
