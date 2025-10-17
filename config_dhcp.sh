@@ -150,7 +150,7 @@ sed -i 's/^SELINUX=.*/SELINUX=enforcing/' /etc/selinux/config
 setenforce 1
 sleep 3
 
-echo " -----------A instalar Fail2Ban------------- "
+echo " -----------A instalar e a configurar Fail2Ban------------------- "
 dnf install -y fail2ban
 systemctl enable --now fail2ban
 
@@ -174,7 +174,7 @@ maxretry = 10
 config2
 
 systemctl restart fail2ban
-
+sleep 1
 echo "Configuração concluída com sucesso"
 echo "Interface LAN:"
 ip addr show $LAN_IF | grep "inet "
