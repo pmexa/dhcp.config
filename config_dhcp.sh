@@ -104,9 +104,9 @@ nmcli connection down $LAN_IF && nmcli connection up $LAN_IF
 
 echo "IP estático configurado em $LAN_IF"
 sleep 3
-DHCP_CONF="/etc/dnsmasq.conf"
-echo "A configurar o ficheiro $DHCP_CONF ..."
-cat > "$DHCP_CONF" <<config
+echo "A configurar o ficheiro dnsmasq.conf ..."
+sleep 1
+cat > /etc/dnsmasq.conf <<config
 interface=$LAN_IF
 bind-interfaces
 
