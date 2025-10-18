@@ -99,12 +99,19 @@ echo "**********************************"
 dnf install -y dnsmasq
 
 sleep 3
+
+if ! nmcli con show | grep -q "$LAN_IF"; then
+    echo "  Nenhuma ligação encontrada para $LAN_IF — a criar nova ligação..."
+    nmcli con add type ethernet ifname $LAN_IF con-name $LAN_IF ipv4.addresses $STATIC_IP/24 ipv4.method manual
+else
 echo "A configurar IP estático em $LAN_IF"
-nmcli connection add type ethernet ifname $LAN_IF con-name $LAN_IF ipv4.addresses $STATIC_IP/24 ipv4.method manual
+nmcli connection modify $LAN_IF ipv4.method manual
+nmcli connection modify $LAN_IF ipv4.addresses $STATIC_IP/24
 nmcli connection modify $LAN_IF ipv4.gateway $GATEWAY
 nmcli connection modify $LAN_IF ipv4.dns $DNS1","$DNS2
 nmcli connection modify $LAN_IF ipv4.may-fail no
 nmcli connection down $LAN_IF && nmcli connection up $LAN_IF
+fi
 
 echo "IP estático configurado em $LAN_IF"
 sleep 3
