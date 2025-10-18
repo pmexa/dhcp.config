@@ -100,8 +100,7 @@ dnf install -y dnsmasq
 
 sleep 3
 echo "A configurar IP estático em $LAN_IF"
-nmcli connection modify $LAN_IF ipv4.method manual
-nmcli connection modify $LAN_IF ipv4.addresses $STATIC_IP/24
+nmcli connection add type ethernet ifname $LAN_IF con-name $LAN_IF ipv4.addresses $STATIC_IP/24 ipv4.method manual
 nmcli connection modify $LAN_IF ipv4.gateway $GATEWAY
 nmcli connection modify $LAN_IF ipv4.dns $DNS1","$DNS2
 nmcli connection modify $LAN_IF ipv4.may-fail no
@@ -121,6 +120,7 @@ server=$DNS2
 dhcp-range=$DHCP_RANGE_START,$DHCP_RANGE_END
 dhcp-option=option:router,$GATEWAY
 dhcp-option=option:ntp-server,$STATIC_IP
+dhcp-option=option:dns-server,$STATIC_IP
 config
 echo "****************************************************"
 echo "* Ficheiro de configuração DHCP criado com sucesso *"
